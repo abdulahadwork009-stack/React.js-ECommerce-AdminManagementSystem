@@ -1,24 +1,25 @@
 import { Routes, Route, Outlet } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import ProtectedRoute from "./components/ProtectedRoute";
 
-import Home from "./pages/Home";
-import Products from "./pages/Products";
-import ProductDetails from "./pages/ProductDetails";
-import Cart from "./pages/Cart";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Login from "./pages/Login";
-import NotFound from "./pages/NotFound";
+import Navbar from "./assets/components/Navbar";
+import Footer from "./assets/components/Footer";
+import ProtectedRoute from "./assets/components/ProtectedRoute";
 
-import DashboardLayout from "./pages/dashboard/DashboardLayout";
-import Dashboard from "./pages/dashboard/Dashboard";
-import ProductsManagement from "./pages/dashboard/ProductsManagement";
-import Orders from "./pages/dashboard/Orders";
-import Users from "./pages/dashboard/Users";
-import Profile from "./pages/dashboard/Profile";
-import Settings from "./pages/dashboard/Settings";
+import Home from "./assets/pages/Home";
+import Products from "./assets/pages/Products";
+import ProductDetails from "./assets/pages/ProductDetails";
+import Cart from "./assets/pages/Cart";
+import About from "./assets/pages/About";
+import Contact from "./assets/pages/Contact";
+import Login from "./assets/pages/Login";
+import NotFound from "./assets/pages/NotFound";
+
+import DashboardLayout from "./assets/pages/dashboard/DashboardLayout";
+import Dashboard from "./assets/pages/dashboard/Dashboard";
+import ProductsManagement from "./assets/pages/dashboard/ProductsManagement";
+import Orders from "./assets/pages/dashboard/Orders";
+import Users from "./assets/pages/dashboard/Users";
+import Profile from "./assets/pages/dashboard/Profile";
+import Settings from "./assets/pages/dashboard/Settings";
 
 function PublicLayout() {
   return (
@@ -35,6 +36,7 @@ function PublicLayout() {
 export default function App() {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
@@ -45,6 +47,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
       </Route>
 
+      {/* Dashboard Routes */}
       <Route
         path="/dashboard"
         element={
@@ -61,6 +64,7 @@ export default function App() {
         <Route path="settings" element={<Settings />} />
       </Route>
 
+      {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
