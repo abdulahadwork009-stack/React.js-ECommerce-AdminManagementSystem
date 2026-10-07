@@ -1,15 +1,14 @@
 import { useState, useMemo, memo, useCallback } from "react";
-import useFetch from "../../hooks/useFetch";
-import Loading from "../../components/Loading";
-import ErrorMessage from "../../components/ErrorMessage";
+import { useAuth } from "../../context/AuthContext";
 import EmptyState from "../../components/EmptyState";
 import Button from "../../components/Button";
+import { DEMO_ADMIN } from "../../utils/helpers";
 
 // React.memo: a row only re-renders when its own props change
 const UserRow = memo(function UserRow({ user, onToggleStatus }) {
   return (
     <tr className="border-t border-gray-200 dark:border-gray-700">
-      <td className="p-3">{user.firstName} {user.lastName}</td>
+      <td className="p-3">{user.name}</td>
       <td className="p-3">{user.email}</td>
       <td className="p-3 capitalize">{user.role}</td>
       <td className="p-3">
@@ -27,33 +26,41 @@ const UserRow = memo(function UserRow({ user, onToggleStatus }) {
 });
 
 export default function Users() {
-  const { data, loading, error } = useFetch("https://dummyjson.com/users?limit=20&select=firstName,lastName,email,role");
+  const { users: registeredUsers } = useAuth();
   const [search, setSearch] = useState("");
   const [statusOverrides, setStatusOverrides] = useState({});
 
   const users = useMemo(() => {
-    if (!data) return [];
-    return data.users.map((u) => ({
-      ...u,
-      status: statusOverrides[u.id] ?? (u.id % 4 === 0 ? "Inactive" : "Active"),
-    }));
-  }, [data, statusOverrides]);
+    // registered users append hote hain, isliye reverse karke latest sabse upar
+    const registered = registeredUsers
+      .filter((u) => u.role === "admin")
+      .map((u) => ({ id: u.id, name: u.name, email: u.email, role: u.role }))
+      .reverse();
+
+    const all = [
+      ...registered,
+      { id: "demo-admin", name: DEMO_ADMIN.name, email: DEMO_ADMIN.email, role: "admin" },
+    ];
+
+    // ek email sirf ek baar
+    const seen = new Set();
+    return all
+      .filter((u) => !seen.has(u.email) && seen.add(u.email))
+      .map((u) => ({ ...u, status: statusOverrides[u.id] ?? "Active" }));
+  }, [registeredUsers, statusOverrides]);
 
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
     return users.filter(
-      (u) =>
-        `${u.firstName} ${u.lastName}`.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q)
+      (u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
     );
   }, [users, search]);
 
   const toggleStatus = useCallback((id) => {
-    setStatusOverrides((prev) => {
-      const current = prev[id];
-      const base = current ?? (id % 4 === 0 ? "Inactive" : "Active");
-      return { ...prev, [id]: base === "Active" ? "Inactive" : "Active" };
-    });
+    setStatusOverrides((prev) => ({
+      ...prev,
+      [id]: (prev[id] ?? "Active") === "Active" ? "Inactive" : "Active",
+    }));
   }, []);
 
   return (
@@ -68,31 +75,27 @@ export default function Users() {
         />
       </div>
 
-      {loading && <Loading message="Loading users..." />}
-      {error && <ErrorMessage />}
-      {!loading && !error && (
-        filteredUsers.length === 0 ? (
-          <EmptyState message="No users found." />
-        ) : (
-          <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-            <table className="w-full min-w-[600px] text-left text-sm">
-              <thead className="bg-gray-100 dark:bg-gray-800">
-                <tr>
-                  <th className="p-3">Name</th>
-                  <th className="p-3">Email</th>
-                  <th className="p-3">Role</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((u) => (
-                  <UserRow key={u.id} user={u} onToggleStatus={toggleStatus} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )
+      {filteredUsers.length === 0 ? (
+        <EmptyState message="No users found." />
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+          <table className="w-full min-w-[600px] text-left text-sm">
+            <thead className="bg-gray-100 dark:bg-gray-800">
+              <tr>
+                <th className="p-3">Name</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Role</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((u) => (
+                <UserRow key={u.id} user={u} onToggleStatus={toggleStatus} />
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

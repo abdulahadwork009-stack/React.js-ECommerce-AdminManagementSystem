@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import useFetch from "../../hooks/useFetch";
-import useLocalStorage from "../../hooks/useLocalStorage";
+import { useProducts } from "../../context/ProductsContext";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
+import ProductForm from "../../components/ProductForm";
 import Loading from "../../components/Loading";
 import ErrorMessage from "../../components/ErrorMessage";
 import EmptyState from "../../components/EmptyState";
@@ -11,46 +11,48 @@ import { formatPrice } from "../../utils/helpers";
 
 export default function ProductsManagement() {
   const navigate = useNavigate();
-  const { data, loading, error } = useFetch("https://dummyjson.com/products?limit=30");
-  // CRUD is simulated: the list is kept in localStorage
-  const [products, setProducts] = useLocalStorage("admin-products", []);
+  const { products, loading, error, addProduct, updateProduct, deleteProduct } = useProducts();
+  const [search, setSearch] = useState("");
+  const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
 
-  useEffect(() => {
-    if (data && products.length === 0) setProducts(data.products);
-  }, [data, products.length, setProducts]);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return products.filter(
+      (p) => p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+    );
+  }, [products, search]);
 
-  // useCallback: stable function reference
-  const deleteProduct = useCallback(
-    (id) => setProducts((prev) => prev.filter((p) => p.id !== id)),
-    [setProducts]
-  );
+  const handleAdd = (data) => {
+    addProduct({ ...data, rating: 0 });
+    setAdding(false);
+  };
 
-  const saveEdit = (e) => {
-    e.preventDefault();
-    setProducts((prev) => prev.map((p) => (p.id === editing.id ? editing : p)));
+  const handleEdit = (data) => {
+    updateProduct({ ...editing, ...data });
     setEditing(null);
   };
 
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditing((prev) => ({
-      ...prev,
-      [name]: name === "title" || name === "category" ? value : Number(value),
-    }));
-  };
-
-  if (loading && products.length === 0) return <Loading message="Loading products..." />;
-  if (error && products.length === 0) return <ErrorMessage />;
-
-  const inputClass = "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-700";
+  if (loading) return <Loading message="Loading products..." />;
+  if (error) return <ErrorMessage />;
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">Products Management</h1>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold">Products Management</h1>
+        <div className="flex gap-2">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search products..."
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+          />
+          <Button onClick={() => setAdding(true)}>+ Add Product</Button>
+        </div>
+      </div>
 
-      {products.length === 0 ? (
+      {filtered.length === 0 ? (
         <EmptyState message="No products found." />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
@@ -66,7 +68,7 @@ export default function ProductsManagement() {
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
+              {filtered.map((p) => (
                 <tr key={p.id} className="border-t border-gray-200 dark:border-gray-700">
                   <td className="p-3">
                     <div className="flex items-center gap-2">
@@ -92,15 +94,15 @@ export default function ProductsManagement() {
         </div>
       )}
 
+      {adding && (
+        <Modal title="Add Product" onClose={() => setAdding(false)}>
+          <ProductForm onSubmit={handleAdd} submitLabel="Add Product" />
+        </Modal>
+      )}
+
       {editing && (
         <Modal title="Edit Product" onClose={() => setEditing(null)}>
-          <form onSubmit={saveEdit} className="space-y-3">
-            <input name="title" value={editing.title} onChange={handleEditChange} className={inputClass} placeholder="Title" required />
-            <input name="category" value={editing.category} onChange={handleEditChange} className={inputClass} placeholder="Category" required />
-            <input name="price" type="number" min="0" step="0.01" value={editing.price} onChange={handleEditChange} className={inputClass} placeholder="Price" required />
-            <input name="stock" type="number" min="0" value={editing.stock} onChange={handleEditChange} className={inputClass} placeholder="Stock" required />
-            <Button type="submit" className="w-full">Save Changes</Button>
-          </form>
+          <ProductForm initialValues={editing} onSubmit={handleEdit} submitLabel="Save Changes" />
         </Modal>
       )}
 

@@ -1,15 +1,19 @@
 import { NavLink } from "react-router-dom";
+import { useMessages } from "../context/MessagesContext";
 
 const links = [
   { to: "/dashboard", label: "Overview", end: true },
   { to: "/dashboard/products", label: "Products" },
   { to: "/dashboard/orders", label: "Orders" },
   { to: "/dashboard/users", label: "Users" },
+  { to: "/dashboard/messages", label: "Messages", badge: true },
   { to: "/dashboard/profile", label: "Profile" },
   { to: "/dashboard/settings", label: "Settings" },
 ];
 
 export default function Sidebar({ open, onClose }) {
+  const { unreadCount } = useMessages();
+
   return (
     <>
       {open && <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={onClose} />}
@@ -27,12 +31,15 @@ export default function Sidebar({ open, onClose }) {
               end={l.end}
               onClick={onClose}
               className={({ isActive }) =>
-                `rounded-md px-3 py-2 text-sm font-medium ${
+                `flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium ${
                   isActive ? "bg-indigo-600 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`
               }
             >
-              {l.label}
+              <span>{l.label}</span>
+              {l.badge && unreadCount > 0 && (
+                <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">{unreadCount}</span>
+              )}
             </NavLink>
           ))}
         </nav>

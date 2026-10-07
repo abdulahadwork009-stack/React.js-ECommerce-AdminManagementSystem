@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import useFetch from "../hooks/useFetch";
+import { useProducts } from "../context/ProductsContext";
 import { useCart } from "../context/CartContext";
 import Container from "../components/Container";
 import Button from "../components/Button";
@@ -10,7 +10,7 @@ import ProductList from "../components/ProductList";
 export default function Home() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { data, loading, error } = useFetch("https://dummyjson.com/products?limit=4");
+  const { products, loading, error } = useProducts();
 
   return (
     <>
@@ -31,7 +31,7 @@ export default function Home() {
         <h2 className="mb-6 text-2xl font-bold">Featured Products</h2>
         {loading && <Loading message="Loading products..." />}
         {error && <ErrorMessage message="Something went wrong. Please try again." />}
-        {data && <ProductList products={data.products} onAddToCart={addToCart} />}
+        {!loading && !error && <ProductList products={products.slice(0, 4)} onAddToCart={addToCart} />}
       </Container>
     </>
   );

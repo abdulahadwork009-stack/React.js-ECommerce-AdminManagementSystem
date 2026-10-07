@@ -12,7 +12,7 @@ const linkClass = ({ isActive }) =>
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const { totalItems } = useCart();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -37,12 +37,17 @@ export default function Navbar() {
           <NavLink to="/about" className={linkClass} onClick={close}>About</NavLink>
           <NavLink to="/contact" className={linkClass} onClick={close}>Contact</NavLink>
           <NavLink to="/cart" className={linkClass} onClick={close}>Cart ({totalItems})</NavLink>
-          {isAuthenticated && <NavLink to="/dashboard" className={linkClass} onClick={close}>Dashboard</NavLink>}
+
           {isAuthenticated ? (
-            <button onClick={handleLogout} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700">Logout</button>
+            <>
+              <NavLink to="/dashboard" className={linkClass} onClick={close}>Dashboard</NavLink>
+              <span className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">Hi, {user.name.split(" ")[0]}</span>
+              <button onClick={handleLogout} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700">Logout</button>
+            </>
           ) : (
-            <NavLink to="/login" className={linkClass} onClick={close}>Login</NavLink>
+            <NavLink to="/login" className={linkClass} onClick={close}>Admin Login</NavLink>
           )}
+
           <button onClick={toggleTheme} className="rounded-md px-3 py-2 text-left text-sm hover:bg-gray-200 dark:hover:bg-gray-700">
             {theme === "light" ? "🌙 Dark" : "☀️ Light"}
           </button>

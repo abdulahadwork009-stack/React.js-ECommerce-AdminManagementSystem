@@ -35,7 +35,15 @@ export default function Cart() {
               <p>Total items: <strong>{totalItems}</strong></p>
               <p className="text-xl">Total price: <strong>{formatPrice(totalPrice)}</strong></p>
             </div>
-            <Button variant="danger" onClick={clearCart}>Clear Cart</Button>
+            <div className="flex gap-3">
+              <Button variant="danger" onClick={clearCart}>Clear Cart</Button>
+              <Link
+                to="/checkout"
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
+              >
+                Proceed to Checkout
+              </Link>
+            </div>
           </Card>
         </div>
       )}

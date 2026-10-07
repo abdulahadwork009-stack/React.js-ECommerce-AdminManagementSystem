@@ -22,7 +22,12 @@ export default function Profile() {
     if (!validateEmail(form.email)) err.email = "Enter a valid email.";
     setErrors(err);
     if (Object.keys(err).length) return;
-    updateProfile(form);
+
+    const result = updateProfile(form);
+    if (!result.success) {
+      setErrors({ email: result.error });
+      return;
+    }
     setSaved(true);
   };
 
@@ -46,7 +51,7 @@ export default function Profile() {
           </div>
           <div>
             <label className="mb-1 block text-sm">Role</label>
-            <input value={user.role} disabled className={`${inputClass} opacity-60`} />
+            <input value={user.role} disabled className={`${inputClass} capitalize opacity-60`} />
           </div>
           <div>
             <label className="mb-1 block text-sm">Profile Information</label>

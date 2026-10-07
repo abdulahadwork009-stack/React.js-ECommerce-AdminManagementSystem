@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useMessages } from "../context/MessagesContext";
 import Container from "../components/Container";
 import Card from "../components/Card";
 import Button from "../components/Button";
@@ -7,6 +8,7 @@ import { validateEmail } from "../utils/helpers";
 const initialForm = { name: "", email: "", subject: "", message: "" };
 
 export default function Contact() {
+  const { addMessage } = useMessages();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
@@ -36,6 +38,12 @@ export default function Contact() {
     const err = validate();
     setErrors(err);
     if (Object.keys(err).length === 0) {
+      addMessage({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+      });
       setSuccess(true);
       setForm(initialForm);
       nameRef.current?.focus();

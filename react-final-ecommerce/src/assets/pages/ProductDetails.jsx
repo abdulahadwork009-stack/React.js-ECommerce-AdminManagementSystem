@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import useFetch from "../hooks/useFetch";
+import { useProducts } from "../context/ProductsContext";
 import { useCart } from "../context/CartContext";
 import Container from "../components/Container";
 import Button from "../components/Button";
@@ -9,15 +10,33 @@ import { formatPrice } from "../utils/helpers";
 
 export default function ProductDetails() {
   const { id } = useParams();
+  const { products, loading: listLoading, error: listError } = useProducts();
   const { addToCart } = useCart();
-  const { data: product, loading, error } = useFetch(`https://dummyjson.com/products/${id}`);
+
+  // 1) store ki list (API + admin ke changes) mein dhoondo
+  const storeProduct = products.find((p) => String(p.id) === id);
+
+  // 2) store load hi na ho saka ho to API se sirf yeh ek product fetch karo
+  const { data: fetched, error: fetchError } = useFetch(
+    listError && !storeProduct ? `https://dummyjson.com/products/${id}` : null
+  );
+
+  const product = storeProduct || (fetched && String(fetched.id) === id ? fetched : null);
+
+  let status = "found";
+  if (!product) {
+    if (listLoading) status = "loading";
+    else if (listError) status = fetchError ? "error" : "loading";
+    else status = "notfound";
+  }
 
   return (
     <Container className="py-8">
       <Link to="/products" className="mb-6 inline-block text-indigo-600 hover:underline">← Back to Products</Link>
 
-      {loading && <Loading message="Loading product..." />}
-      {error && <ErrorMessage message="Something went wrong. Please try again." />}
+      {status === "loading" && <Loading message="Loading product..." />}
+      {status === "error" && <ErrorMessage message="Something went wrong. Please try again." />}
+      {status === "notfound" && <ErrorMessage message="Product not found." />}
 
       {product && (
         <div className="grid gap-8 md:grid-cols-2">

@@ -6,7 +6,10 @@ export default function useFetch(url) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!url) return;
+    if (!url) {
+      setLoading(false);
+      return;
+    }
     const controller = new AbortController();
     setLoading(true);
     setError(null);
@@ -27,7 +30,7 @@ export default function useFetch(url) {
         }
       });
 
-    return () => controller.abort(); // cleanup: cancel old request
+    return () => controller.abort();
   }, [url]);
 
   return { data, loading, error };
